@@ -1,10 +1,10 @@
 # Curso de Visualización de datos
 
-H´éctor Tejero. 
+Héctor Tejero. 
 
 Translational Bioinformatics Unit. CNIO 
 
-Material para un curso b´ásico de visualización de datos
+Material para un curso básico de visualización de datos
 
 
 1. Salida de imágenes a fichero
