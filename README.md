@@ -1,6 +1,7 @@
 # Curso de Visualización de datos
 
 Héctor Tejero
+
 [Researchgate Profile](https://www.researchgate.net/profile/Hector_Tejero) 
 [Google scholar](https://scholar.google.es/citations?user=LpfQt8wAAAAJ&hl=en)
 
