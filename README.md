@@ -7,7 +7,7 @@ Translational Bioinformatics Unit. CNIO
 Material para un curso básico de visualización de datos
 
 
-1. Salida de imágenes a fichero
+1. [Salida de imágenes a fichero](http://rpubs.com/htejero/212362)
 2. Visualización espacial con ggmap
 3. Heatmaps
 4. Radar plots
