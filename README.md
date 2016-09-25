@@ -1,8 +1,8 @@
 # Curso de Visualización de datos
 
-Héctor Tejero. 
+[Héctor Tejero](https://www.researchgate.net/profile/Hector_Tejero) 
 
-Translational Bioinformatics Unit. CNIO 
+[Translational Bioinformatics Unit](https://www.cnio.es/ing/grupos/plantillas/presentacion.asp?pag=1464). CNIO 
 
 Material para un curso básico de visualización de datos
 
