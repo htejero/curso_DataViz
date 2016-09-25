@@ -1,0 +1,143 @@
+---
+title: "Ejemplo"
+author: "Hector Tejero"
+date: "September 23, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) # Aquí se introducen las opciones generales para todo el documento 
+```
+
+## R Markdown  
+
+Los documentos de R Markdown permiten generar "narrativas de datos". En un mismo documento puedes tener texto explicando qué haces, ir insertando el código que utilizas para hacerlo y representar gráficamente los resultados del análisis. Está basado en un lenguaje llamado [markdown]((https://en.wikipedia.org/wiki/Markdown) que permite dar formato de manera muy simple sobre texto plano. Luego, el documento puede convertirse fácilmente en HTML, PDF o Word. 
+
+
+## Generar los HTML 
+
+En la parte de arriba de RStudio hay un botón que pone **Knit HTML** con el que puede generarse el documento HTML en el que se aparecerá el texto, y _snippets_ con el código y el resultado de la ejeción. 
+
+## Formato básico 
+
+Markdown permite generar muy fácilmente diferentes formatos de texto. 
+
+#### Encabezados 
+
+- # Texto H1
+- ## Texto H2
+- ### Texto H3
+- #### Texto 4
+
+
+#### Formatos de texto 
+
+- *cursiva* (también _cursiva_)
+- **bold**  (o __negrita__)
+- `código`
+- ~~tachado~~
+
+#### Enlaces e imágenes 
+
+
+- [enlaces](rmarkdown.rstudio.com)
+- ![Imágenes](https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Markdown-mark.svg/208px-Markdown-mark.svg.png)
+
+#### Símbolos matemáticos 
+
+- Superíndice m^2^
+- Ecuaciones en Latex, $E = mc^{2}$
+
+Por si no os habéis fijado, así es como se genera una lista en markdown
+
+* Elemento 1
+    + Elemento 1.1  (dos tabulaciones)
+* Elemento 2
+* Elemento 3
+
+También pueden ser numeradas
+
+1. Elemento 1
+2. Elemento 2
+
+O, por ejemplo, una cita
+
+> En un lugar de la mancha... 
+
+
+## Codigo
+
+En R Markdown, se utilizan la comilla sencilla invertida \`  para mostrar código que no se ejecuta, por ejemplo, para dar formato a `ggplot2` 
+
+Ahora bien, lo interesante es que R Markdown permite insertar _snipptes_ de código ejecutable como el de abajo que se conocen como _code chunks_. 
+
+```{r }
+summary(cars)
+
+```
+
+Como veis, se muestra diferente el código y la salidad del mismo.
+
+Los _code chunks_ permiten que el documento de R Markdown se comporte como un _notebook_ ya que puedes ir ejecutándoles en la consola (pulsando el triangulito verde de la esquina superior derecha del chunk o vien pulsando crtl+shift+enter)
+
+El inicio del _code chunk_ con `r` determina que el código siguiente será R, pero no es el único lenguaje que soporta R Markdown, también soporta: 
+
+- Python
+- SQL
+- Bash
+- Rcpp
+- Stan
+- JavaScript
+- CSS
+
+```{python}
+x = 'hello, python world!'
+print(x.split(' '))
+```
+
+También es posible insertar lo que se conoce como código _inline_, es decir, sin el snippet. Por ejemplo, puedo poner las cinco primeras letras con el siguiente código en R `r letters[1:5]`
+
+Los _code chunks_ tiene diferentes opciones ([aquí](http://rmarkdown.rstudio.com/lesson-3.html) en _chunk options_) que se introducen en el encabezado. Permiten controlar la ejecución y la salida del resultado del código. Las más importantes son `eval` y `echo`. La primera determina si se ejecuta o no el código y la segunda si se muestra o no el código.  
+
+```{r, eval = FALSE}
+
+head(cars)
+
+```
+
+El _chunk_ anterior no se ha ejecutado y no se muestra la salida. 
+
+```{r, echo = FALSE}
+head(cars)
+
+```
+
+El _chunk_ anterior se ha ejecutado pero no se muestra el código. 
+
+## Gráficos
+
+En R Markdown, se pueden incluir también gráficos. 
+
+```{r pressure, echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+ggplot(data = iris, aes(x = Sepal.Length, y = Petal.Length, fill = Species )) + geom_point(shape = 21)
+
+```
+
+Hemos puesto `echo = FALSE` para que no se muestre el código en `ggplot2` que genera la figura
+
+También se pueden incluir gráficos de plotly
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+library(plotly)
+plot_ly(midwest, x = percollege, color = state, type = "box")
+
+
+```
+
+
+
+
+## Recursos 
+
+R Markdwon tiene un [cheathseet aqui](https://www.rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf) y la referencia [aquí](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf). Además tiene un tutorial muy completo [aquí](http://rmarkdown.rstudio.com/lesson-1.html)

@@ -1,0 +1,169 @@
+---
+title: "Heatmaps con ggplot2"
+author: "Hector Tejero. Translational Bioinformatics Unit. CNIO"
+date: "September 26, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Heatmaps
+
+Un [_heatmap_](https://en.wikipedia.org/wiki/Heat_map) es simplemente una representación gráfica en la que los valores de una matriz numérica son representados con una determinada escala de colores. 
+
+![](https://marcinkula.files.wordpress.com/2011/10/f1_heatmap1.png?w=600&h=458)
+
+`ggplot2` no tiene una función específica para los _heatmaps_ pero pueden representarse usando [`geom_tile()`](http://docs.ggplot2.org/current/geom_tile.html) 
+
+Hay dos puntos clave a la hora de representar un _heatmap_ en `ggplot2`: transformar la matriz en un `data.frame` y elegir la escala de colores. 
+
+## Creación y representación de un dataset mínimo 
+
+En primer lugar vamos a generar el dataset mínimo necesario para representarlo en `ggplot2`. 
+
+```{r}
+
+set.seed(1)
+df.heatmap <- expand.grid(Var1 = letters[1:5], Var2 = 1:5)
+df.heatmap$score <- runif(nrow(df.heatmap), min = -2, max = 2)
+
+```
+
+La función `expand.grid` genera un `data.frame` con todas las combinaciones posibles de los factores que les damos. En este caso, las 5 primeras letras del abecedario en minúsculas `letters[1:5]` = `r letters[1:5]` y los números del 1 al 5. Luego generamos un vector aleatorio llamado `score` que es la variable que representaremos.
+
+Para ello, como hemos dicho, usamos `geom_tile()`
+
+```{r}
+library(ggplot2)
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile()
+
+```
+
+
+Si echamos un vistazo a `df.heatmap` 
+
+```{r}
+head(df.heatmap)
+```
+
+vemos que dicha estructura no es la habitual que asociamos a un _heatmap_, una matriz de datos. A continuación veremos como obtener este tipo de data.frames a partir de matrices de datos. 
+
+## Transformar los datos 
+
+En primer lugar generamos una matriz de datos cuya estructura sea coherente con el data.frame anterior: 
+
+```{r}
+
+mat.heatmap = matrix(runif(25), ncol = 5, nrow = 5)
+colnames(mat.heatmap) = 1:5
+rownames(mat.heatmap) = letters[1:5]
+
+head(mat.heatmap)
+```
+
+Esta matriz podría ser la expresión génica de los genes `r letters[1:5]` en las muestras `1:5`. Ahora queremos convertir esta matriz en una estructura tipo
+
+```{r}
+head(df.heatmap)
+```
+
+para ello recurrimos a la función `melt` del paquete [`reshape`](https://www.datanalytics.com/2011/09/07/el-paquete-reshape-de-r-i-melt/). La función `melt` (y su inversa `cast`) permiten transformar una matriz entre sus [formatos largo y ancho](http://www.theanalysisfactor.com/wide-and-long-data/)
+
+![](http://seananderson.ca/images/dcast-illustration.png)
+
+
+```{r}
+require(reshape)
+
+mat.heatmap.m = melt(mat.heatmap)
+head(mat.heatmap.m)
+
+ggplot(data = data.frame(mat.heatmap.m), aes(x = X1, y = X2, fill= value)) + geom_tile()
+
+```
+
+
+## La escala de colores 
+
+La otra parte crucial de un heatmap es la escala de colores. En un _heatmap_ lo que se hace es asignar a cada valor númerico un tono diferente de color. Es decir, estamos generando un gradiente de colores a partir de los valores numéricos a representar. Por ello para modificarlo usaremos las funciones de la familia [`scale_fill_gradient()`](http://docs.ggplot2.org/current/scale_gradient.html)
+
+```{r}
+
+df.heatmap <- expand.grid(Var1 = letters[1:10], Var2 = 1:10)
+df.heatmap$score <- runif(nrow(df.heatmap), min = -2, max = 2)
+
+```
+
+Con`scale_fill_gradient()` podemos modificar los colores a usar en los valores mínimo y máximo de la variable y `ggplot2` va a generar un gradiente con ellos. 
+
+```{r}
+
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() + scale_fill_gradient(low = "white", high = "steelblue")
+
+```
+
+Para quitar el fondo gris del heatmap hay que hacer lo siguiente: 
+
+```{r}
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() + scale_fill_gradient(low = "white", high = "steelblue") + scale_x_discrete(expand = c(0, 0)) + scale_y_continuous(expand = c(0,0))
+
+```
+
+
+
+Con `scale_fill_gradient2()` podemos incluir un color divergente (un color que no sea intermedio) para valores intermedios. Por ejemplo, por defecto es blanco entre azul y rojo
+
+```{r}
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() + scale_fill_gradient2()
+
+```
+
+pero también podemos determinarlo nosotros. 
+
+```{r}
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() +
+  scale_fill_gradient2(low = "red", high = "green", mid = "black")
+
+```
+
+
+Finalmente, la función `scale_fill_gradientn()` nos permite determinar múltiples colores a usar y no sólo escalas entre dos con o sin un color divergente en medio. 
+
+Por ejemplo, una escala arcoiris que, al menos en este _heatmap_ desordenado, queda bastante mal.  
+
+```{r}
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() +
+  scale_fill_gradientn(colours = rainbow(7))
+```
+
+Existen otras _paletas_ predefinidas en R. Podemos acceder a ellas mediante la ayuda `rainbow`
+
+```{r}
+?rainbow
+```
+
+
+```{r}
+ggplot(df.heatmap, aes(x = Var1, y = Var2, fill = score)) + geom_tile() +
+  scale_fill_gradientn(colours = cm.colors(7))
+```
+
+
+## Más recursos 
+
+Algunos tutoriales sobre heatmaps en `ggplot2` 
+
+### Básicos 
+
+[ggplot2: Quick Heatmap Plotting](https://learnr.wordpress.com/2010/01/26/ggplot2-quick-heatmap-plotting/)
+
+[Simple Heatmap in R with Formula One Dataset](https://marcinkula.wordpress.com/2011/10/25/simple-heatmap-in-r-with-formula-one-dataset/)
+
+
+### Avanzados 
+
+[Making Faceted Heatmaps with ggplot2](https://rud.is/b/2016/02/14/making-faceted-heatmaps-with-ggplot2/)
+
+[Heatmaps con dendogramas](https://plot.ly/ggplot2/ggdendro-dendrograms/)

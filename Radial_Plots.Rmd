@@ -1,0 +1,108 @@
+---
+title: "Radar Plots usando ggplot2"
+author: "Hector Tejero. Translational Bioinformatics Unit. CNIO"
+date: "September 26, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduccion 
+
+Con `ggplot2` es muy sencillo hacer los llamados [gráficos de radar, de araña o de Kiviatt](https://en.wikipedia.org/wiki/Radar_chart). 
+![](https://upload.wikimedia.org/wikipedia/commons/1/18/Spider_Chart2.jpg)
+
+para ello lo que haremos será hacer una representación y pasarlo a coordenadas __polares__ usando `coord_polar`. En las coordenadas polares, cada punto viene definido por una distancia respecto al origen y un ángulo respecto a un eje que cruza por dicho origen. La transformación en `ggplot2` implica que la coordenada Y se transforma en la distancia respecto al origen y la coordenada X se transforma en el ángulo, aunque se ve mejor si se piensa que es la posición relativa en el círculo concéntrico que le corresponde. 
+
+## Dataset Mínimo 
+
+Con el siguiente código de `R` vamos a generar un dataset mínimo que poder representar en forma de _radar plot_. 
+
+```{r}
+set.seed(1)  #para que sea reproducible 
+
+df.rad = expand.grid(letters[1:5], 1:2)
+df.rad$score = runif(nrow(df.rad))
+
+```
+
+La función `expand.grid` genera un `data.frame` con todas las combinaciones posibles de los factores que les damos. En este caso, las 5 primeras letras del abecedario en minúsculas `letters[1:5]` = `r letters[1:5]` y los números 1 y 2. Luego generamos un vector aleatorio llamado `score` que es la variable que representaremos.
+
+
+
+```{r}
+head(df.rad)
+```
+
+## Representación 
+
+El código para representar el gráfico es el siguiente: 
+
+```{r}
+library(ggplot2)
+ggplot(df.rad, aes(x = Var1, y = score, col = Var2, group = Var2)) + geom_point() + geom_line() + coord_polar()
+
+```
+
+Si os fijais, lo que hace el radial plot es el `coord_polar()` final, que cambia el sistema de coordenadas de cartesianas a radiales. Sin él, la representación quedaría así: 
+
+
+```{r }
+
+ggplot(df.rad, aes(x = Var1, y = score, col = Var2, group = Var2)) + geom_point() + geom_line() 
+
+```
+
+Si necesitais cerrar las líneas, podéis recurrir a la `geom_polygon` sin rellenar.
+
+
+```{r}
+ggplot(df.rad, aes(x = Var1, y = score, col = Var2, group = Var2)) + 
+  geom_polygon(fill = NA) + coord_polar()
+
+
+```
+
+
+A parte del cambio de coordenadas, se pueden aplicar el resto de transformaciones de `ggplot2` como por ejemplo hacer un `facet` sobre la variable 2. 
+
+```{r}
+#Aumentamos el número de factores de la variable 2 primero para que el efecto sea más claro. 
+df.rad = expand.grid(letters[1:5], 1:5)
+df.rad$score = runif(nrow(df.rad))
+
+ggplot(df.rad, aes(x = Var1, y = score, col = Var2, group = Var2)) + 
+  geom_polygon(fill = NA) + coord_polar() + facet_wrap(~Var2)
+
+
+```
+
+
+## Otros plots 
+
+En realidad, la transformación en coordenadas polares puede aplicarse a cualquier otro plot, por ejemplo, las barplots:  
+
+```{r}
+ggplot(data = diamonds, aes(x = cut)) + geom_bar(fill = "lightblue", colour = "black") + coord_polar()
+
+ggplot(data = diamonds, aes(x = cut, fill = color)) + geom_bar(colour= "black", size = 0.3 ) +  coord_polar()
+
+ggplot(data = diamonds, aes(x = cut, fill = color)) + geom_bar(colour= "black", position = "dodge" , size = 0.3 ) +  coord_polar()
+
+```
+
+
+Sin embargo, tal y como comenta la propia ayuda de la función [`coord_polar`](http://docs.ggplot2.org/current/coord_polar.html), _"polar coordinates has  major perceptual problems.  (...) Use with EXTREME caution"_
+
+
+## Más recursos 
+
+[Making polar plots with ggplot2](http://rstudio-pubs-static.s3.amazonaws.com/72298_c1ba7f77276a4f27a0f375cadc9fac5d.html)
+
+[From Parallel Plot to Radar Plot](http://www.cmap.polytechnique.fr/~lepennec/R/Radar/RadarAndParallelPlots.html)
+
+[A radar plot function for visualising Cluster Profiles](http://rstudio-pubs-static.s3.amazonaws.com/5795_e6e6411731bb4f1b9cc7eb49499c2082.html)
+
+

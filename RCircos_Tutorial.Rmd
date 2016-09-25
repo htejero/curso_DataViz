@@ -1,0 +1,366 @@
+---
+title: "RCircos"
+author: "Hector Tejero"
+date: "September 21, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Circos plot
+
+Los [Circos plot](http://circos.ca/) son representaciones circulares originalmente concebidas para representar información genómica (aunque se pueden representar otras cosas). La estructura general puede verse en el siguiente gráfico. 
+
+![](http://www.pnas.org/content/109/42/16786/F3.large.jpg)
+
+En la parte más externa del gráfico está representado en forma de ideograma la estructura cromosómica del genoma. En las partes más internas se representa diferentes tipos de información (texto, puntos, histogramas...) que está mapeada sobre el genoma, es decir, es información que está localizada "espacialmente" en el mismo usando coordenadas genómicas. A cada una de estas representaciones las llamamos __tracks__. Por último, en la región más interna se pueden representar relaciones entre diferentes coordenadas genómicas mediante __links__. 
+
+En R hay diferentes paquetes para hacer estas representaciones. La extensión de ```ggplot2```,  ```ggbio``` es quizás el más potente, pero también el más complejo. En esta introducción veremos ```RCircos```, que es más sencillo. 
+
+### RCircos 
+
+En primer lugar instalamos y cargamos el paquete ```RCircos```
+
+```{r}
+require(RCircos)
+```
+
+El propio paquete tiene una [`vignette`](https://cran.r-project.org/web/packages/RCircos/vignettes/Using_RCircos.pdf) en la cual nos hemos basado para hacer este tutorial. 
+
+
+### Configuración del RCircos 
+
+Un gráfico Circos empiezan con un ideograma del mapa cromosómico de la especie en cuestión: `RCircos` viene con ideogramas cromosómicos para tres especies: humano, ratón y rata. Pueden cargarse usando la función de R `data()`. Carguemos y veamos el de humano: 
+
+```{r }
+data(UCSC.HG19.Human.CytoBandIdeogram)
+head(UCSC.HG19.Human.CytoBandIdeogram)
+str(UCSC.HG19.Human.CytoBandIdeogram)
+```
+
+Vemos que el objeto es simplemente un `data.frame` que contiene la información citogenética a representar. 
+
+Los de ratón y rata son, respectivamente, `UCSC.Mouse.GRCm38.CytoBandIdeogram` y `UCSC.Baylor.3.4.Rat.cytoBandIdeogram`. 
+
+Una vez cargado el ideograma, hay que inicializar los componentes esenciales de `RCircos`
+
+```{r}
+
+chr.exclude <- NULL
+cyto.info <- UCSC.HG19.Human.CytoBandIdeogram
+tracks.inside <- 10
+tracks.outside <- 0
+
+RCircos.Set.Core.Components(cyto.info, chr.exclude,
+                              tracks.inside, tracks.outside)
+```
+
+Los argumentos son bastante autoexplicativos. En `chr.exclude` debemos incluir aquellos cromosomas que NO queremos que aparezcan en la representación (el x `"chrX"` y el Y `"chrY"` suelen ser los candidatos habituales a excluir)
+
+El ideograma cromosómico a utilizar se explicita en `cyto.info` mientras que `tracks.inside` y `tracks.outside` es el número de tracks a utilizar en el interior y el exterior del ideograma, respectivamente. 
+
+
+### Representar el ideograma
+
+Una vez establecidos los componentes esenciales de `RCircos` podemos hacer una primera representación del ideograma. Aquí es importante tener en cuenta que `RCircos` no tiene control de los _devices_ gráficos de R. Es decir, debemos trabajar con él dentro del _device_. Si no especificamos uno, utilizará la salida gŕafica estándar por pantalla. Ahora bien, los Circos plot pueden ser bastante pesados y eso puede dar problemas con Rstudio. Si queremos que la salida sea a un fichero pdf, por ejemplo, habría que abrir dicho _device_ previamente con `pdf()` y cerrarlo al final con `dev.off()`
+
+```{r}
+
+RCircos.Set.Plot.Area()
+
+RCircos.Chromosome.Ideogram.Plot()
+
+```
+
+Con esto representamos únicamente el ideograma cromosómico. El primer comando prepara ("limpia", por así decirlo) el área a representar. Siempre que queramos empezar un RCircos de nuevo hay que utilizarlo. 
+
+Representemos el ideograma excluyendo los cromosomas X e Y. 
+
+```{r}
+chr.exclude <- c("chrX", "chrY")
+RCircos.Set.Core.Components(cyto.info, chr.exclude,
+                            tracks.inside, tracks.outside)
+
+RCircos.Set.Plot.Area()
+
+RCircos.Chromosome.Ideogram.Plot()
+```
+
+### Añadir los tracks
+
+Una vez que ya hemos representado el ideograma, vamos añadiendo tarcks. En nuestro caso, en el interior ya que así lo hemos especificado inicialmente. Existen diferentes tipos de tracks gráficos que pueden añadirse al gráfico: 
+
+– heatmap
+– histogram
+– lines
+– scatterplot
+– tiles
+
+Además se pueden representar enlaces entre regiones o posiciones cromosómicas y también conectores y texto para el nombre de los genes. 
+
+Para introducir cada tipo de track se utiliza una función concreta de la forma `RCircos.TIPO.Plot`. Además, cada fucnión requiere que los datos a representar estén en un `data.frame` añadidos a su posición genómica. 
+
+Por ejemplo, veamos en primer lugar como añadir los nombres de los genes en el Circos plot. Para ello, lo primero es cargar los datos de los nombres de los genes: 
+
+```{r}
+data(RCircos.Gene.Label.Data)
+
+head(RCircos.Gene.Label.Data)
+
+```
+
+
+Una vez cargados los datos representamos el primer _track_, en este caso los conectores de las posiciones genómicas a los textos. 
+
+```{r, message=FALSE}
+chr.exclude <- NULL
+
+RCircos.Set.Core.Components(cyto.info, chr.exclude,
+                            tracks.inside, tracks.outside)
+
+RCircos.Set.Plot.Area()
+
+RCircos.Chromosome.Ideogram.Plot()
+
+
+side <- "in"  # En que lado del ideograma estará: "in" or "out"
+
+track.num <- 1  # La posición del track 
+
+RCircos.Gene.Connector.Plot(RCircos.Gene.Label.Data,
+                              track.num, side)
+
+```
+
+La sintaxis del comando es, de nuevo, muy intuitiva. La función `RCircos.Gene.Connector.Plot` require los datos (`RCircos.Gene.Label.Data`), la posición del track en cuestión y si va dentro ("in") o fuera ("out") del ideograma. A continuación, usando la función `RCircos.Gene.Name.Plot` introducimos los nombres de los genes, a esta función hay que pasarle un argumento adicional especificando en qué columna del `data.frame` están los datos (en este caso los nombres de los genes) a representar. 
+
+__OJO__: Cada vez que se añade un track no es necesario reiniciar todo el plot como aparece en el código de abajo. Esto sólo es necesario para que R Markdown pueda representar cada uno de los plots. En el script con el código limpio adjunto a este tutorial veréis que los tracks se añaden secuencialmente. 
+
+
+```{r, message=FALSE, collapse=TRUE}
+ 
+  RCircos.Set.Plot.Area()
+
+  RCircos.Chromosome.Ideogram.Plot()
+  
+  side <- "in"  # En que lado del ideograma estará: "in" or "out"
+  
+  track.num <- 1  # La posición del track 
+  
+  RCircos.Gene.Connector.Plot(RCircos.Gene.Label.Data,
+                              track.num, side)
+  track.num <- 2
+
+  name.col <- 4  #indicamos la columna en la que está el nombre
+
+  RCircos.Gene.Name.Plot(RCircos.Gene.Label.Data,
+                          name.col,track.num, side)
+ 
+
+```
+
+A continuación incluiremos un par de tracks gráficos. Por ejemplo, un heatmap de la expresión en la línea celular A498. Podemos encontrarla en el dataset `RCircos.Heatmap.Data`. 
+
+
+```{r}
+
+data(RCircos.Heatmap.Data)
+
+head(RCircos.Heatmap.Data)
+```
+
+Donde vemos que la expresión de dicha línea está en la columna 6 y así se lo indicaremos a la función _RCircos.Heatmap.Plot_
+
+
+```{r, message=FALSE, collapse=TRUE}
+ 
+  RCircos.Set.Plot.Area()
+
+  RCircos.Chromosome.Ideogram.Plot()
+  
+  side <- "in"  # En que lado del ideograma estará: "in" or "out"
+  
+  track.num <- 1  # La posición del track 
+  
+  RCircos.Gene.Connector.Plot(RCircos.Gene.Label.Data,
+                              track.num, side)
+  track.num <- 2
+
+  name.col <- 4  #indicamos la columna en la que está el nombre
+
+  RCircos.Gene.Name.Plot(RCircos.Gene.Label.Data,
+                          name.col,track.num, side)
+ 
+  data.col <- 6   
+
+  track.num <- 3
+
+  RCircos.Heatmap.Plot(RCircos.Heatmap.Data, data.col,
+                     track.num, side)
+  
+
+```
+
+Siguendo este esquema general existen otros tipos de funciones para representar tracks gráficos. En el codigo siguiente se muestra el resto. Con todos ellos formamos un RCircos completo. 
+
+
+```{r, message= FALSE}
+
+  RCircos.Set.Plot.Area()
+
+  RCircos.Chromosome.Ideogram.Plot()
+  
+  side <- "in"  # En que lado del ideograma estará: "in" or "out"
+  
+  track.num <- 1  # La posición del track 
+  
+  RCircos.Gene.Connector.Plot(RCircos.Gene.Label.Data,
+                              track.num, side)
+  track.num <- 2
+
+  name.col <- 4  #indicamos la columna en la que está el nombre
+
+  RCircos.Gene.Name.Plot(RCircos.Gene.Label.Data,
+                          name.col,track.num, side)
+ 
+  data.col <- 6   
+
+  track.num <- 3
+
+  RCircos.Heatmap.Plot(RCircos.Heatmap.Data, data.col,
+                     track.num, side)
+
+ data(RCircos.Line.Data)
+ 
+ data.col <- 5
+ track.num <- 4
+ side <- "in"
+ RCircos.Line.Plot(RCircos.Line.Data, data.col,
+                     track.num, side)
+ 
+ 
+ data(RCircos.Scatter.Data)
+ data.col <- 5
+ track.num <- 5
+ side <- "in"
+ by.fold <- 1   # los puntos con un valor por encima de by.fold se pintan en rojo 
+ RCircos.Scatter.Plot(RCircos.Scatter.Data, data.col,
+                      track.num, side, by.fold)
+ 
+ 
+ data(RCircos.Histogram.Data)
+ data.col <- 4
+ track.num <- 6
+ side <- "in"
+ RCircos.Histogram.Plot(RCircos.Histogram.Data,
+                          data.col, track.num, side)
+ 
+ 
+ data(RCircos.Tile.Data)
+ track.num <- 7
+ side <- "in"
+ RCircos.Tile.Plot(RCircos.Tile.Data, track.num, side)
+
+```
+
+
+## Enlaces 
+
+El último tipo de representación de los Circos son los enlaces entre posiciones del genoma. En `RCircos` estos enlaces pueden ser _links_ si son entre regiones pequeñas o _ribbons_ si son entre regiones más o menos grandes. Veamos los datasets de ejemplo para los _links_
+
+```{r}
+
+ data(RCircos.Link.Data)
+ 
+ head(RCircos.Link.Data)
+ 
+```
+
+y para los _ribbons_
+
+```{r}
+
+ data(RCircos.Ribbon.Data)
+ head(RCircos.Ribbon.Data)
+```
+
+En ambos casos se va a representar un `data.frame` en el que en cada línea hay dos regiones genómicas representadas por el cromosoma, la posición en la que empieza y la que acaba. Se ve que la única diferencia entre los datos de los _links_ y los de los _ribbons_ es el tamaño de dichas regiones. Para representarlo se hace lo siguiente. 
+
+
+```{r, message=FALSE}
+  RCircos.Set.Plot.Area()
+
+  RCircos.Chromosome.Ideogram.Plot()
+  
+  side <- "in"  # En que lado del ideograma estará: "in" or "out"
+  
+  track.num <- 1  # La posición del track 
+  
+  RCircos.Gene.Connector.Plot(RCircos.Gene.Label.Data,
+                              track.num, side)
+  track.num <- 2
+
+  name.col <- 4  #indicamos la columna en la que está el nombre
+
+  RCircos.Gene.Name.Plot(RCircos.Gene.Label.Data,
+                          name.col,track.num, side)
+ 
+  data.col <- 6   
+
+  track.num <- 3
+
+  RCircos.Heatmap.Plot(RCircos.Heatmap.Data, data.col,
+                     track.num, side)
+
+ data(RCircos.Line.Data)
+ 
+ data.col <- 5
+ track.num <- 4
+ side <- "in"
+ RCircos.Line.Plot(RCircos.Line.Data, data.col,
+                     track.num, side)
+ 
+ 
+ data(RCircos.Scatter.Data)
+ data.col <- 5
+ track.num <- 5
+ side <- "in"
+ by.fold <- 1   # los puntos con un valor por encima de by.fold se pintan en rojo 
+ RCircos.Scatter.Plot(RCircos.Scatter.Data, data.col,
+                      track.num, side, by.fold)
+ 
+ 
+ data(RCircos.Histogram.Data)
+ data.col <- 4
+ track.num <- 6
+ side <- "in"
+ RCircos.Histogram.Plot(RCircos.Histogram.Data,
+                          data.col, track.num, side)
+ 
+ 
+ data(RCircos.Tile.Data)
+ track.num <- 7
+ side <- "in"
+ RCircos.Tile.Plot(RCircos.Tile.Data, track.num, side)
+
+ track.num <- 8
+ RCircos.Link.Plot(RCircos.Link.Data, track.num, by.chromosome = TRUE)
+ 
+ RCircos.Ribbon.Plot(ribbon.data=RCircos.Ribbon.Data,
+                        track.num=9, by.chromosome=FALSE, twist=FALSE)
+ 
+ 
+```
+
+En la ayuda de ambas funciones puede verse como cambiar algunas de las propiedades de los gráficos como la posibilidad de que haya _twist_ en los _ribbons_ o que los colores sean diferentes en los enlaces intra o extracromosomicos.  
+
+## Más recursos 
+
+Este tutorial es, básicamente, una reorganización de la viñeta del paquete, donde puede encontrarse más información para modificar algunas de las propiedades de los Circos. 
+
+- [Vignette de RCircos](https://cran.r-project.org/web/packages/RCircos/vignettes/Using_RCircos.pdf)
+
+
+

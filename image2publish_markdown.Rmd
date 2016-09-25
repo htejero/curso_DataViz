@@ -1,0 +1,217 @@
+---
+title: "Salida de imágenes a fichero"
+author: "Hector Tejero"
+date: "September 26, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tipos de imagenes digitales
+
+Básicamente, existen dos tipos de imágenes digitales: 
+
+- Mapas de bits
+
+- Gráficos vectoriales
+
+La siguiente imagen muestra sus principales características. 
+
+![](http://imagebox.com/app/wp-content/uploads/2013/05/BitmapVsVectorChart-01.jpg)
+
+
+A efectos prácticos para esta clase lo importante es que los mapas de bits, a diferencia de los vectoriales, son dependientes de la resolución y, por tanto, esta tiene que ser fijada al guardar la imagen. 
+
+Por tanto, lo primero es saber qué formato o tipo de imagen tenemos que guardar.
+
+## Imagenes para publicar
+
+La mayoría de revistas exigen alguno de estos tres tipos de formatos para las imágenes: 
+
+- PDF (vectorial)
+
+- EPS (vectorial)
+
+- TIFF (bitmap)
+
+Además, suelen definir un tamaño y una resolución determinada, que tendremos que indicar al generar la imagen.  
+
+## La salida gráfica a ficheros en R: Devices
+
+En R, la sálida gráfica tiene lugar a través de los `graphical devices` que indican el formato de la imagen generada. Llamando a la ayuda 
+
+```{r}
+?Devices
+```
+
+obtenemos una lista de los posibles devices que pueden ser utilizados en R. Empezaremos por el PDF.
+
+## Salida a vectorial (PDF y EPS)
+
+### PDF 
+
+La salida gráfica a fichero a través de devices tiene en R la misma estructura general. Utilizando le device pdf, hagamos una prueba con ggplot2
+
+```{r, echo = TRUE,  results = "hide"}
+library(ggplot2)
+
+p <- ggplot(data = mtcars, aes(x = disp, y = mpg, colour = as.factor(carb) )) + geom_point()
+
+p
+
+pdf()  # abrir el device, en este caso pdf  
+
+p   # representar la imagen
+
+dev.off()  #cerrar el device
+
+
+```
+
+Este código ha guardado una figura de ggplot en un fichero pdf dentro del directorio en el que estéis trabajando. Como no le hemos pasado ningun argumento, ha utilizado las opciones por defecto, incluyendo el nombre `Rplots.pdf`. 
+
+Podemos obtener más información sobre el device pdf con ```?pdf``` y podemos ver las opciones por defecto con 
+
+```{r}
+pdf.options()
+
+```
+
+Vamos a cambiar las opciones más importantes, el nombre de fichero y el tamaño de la figura. 
+
+```{r, results = "hide"}
+
+pdf(file = "ejemplo1.pdf", height = 5, width = 10)  
+
+p    
+
+dev.off()   
+
+
+```
+
+El comportamiento es bastante intuitivo. Lo __más importante__ es que `pdf()` interpreta las medidas en _inches_ (el valor por defecto es 7) y , además, no es posible cambiar la unidad de medida. Para introducir las medidas en cm hay que dividir su valor por 2.54 cm/in.  
+
+
+```{r, results = "hide"}
+
+
+pdf(file = "ejemplo1.pdf", height = 5/2.54, width = 10/2.54)  # Una figura de 5x10 cm
+
+p    
+
+dev.off()   
+
+
+```
+
+
+En PDF, si dentro del device abierto representamos varios gráficos, por defecto cada uno va en una hoja diferente del fichero. 
+
+```{r,  results = "hide"}
+
+pdf(file = "ejemplo1.pdf", height = 5/2.54, width = 10/2.54)  # Una figura de 5x10 cm
+
+p    
+
+p + xlab("Weight (1000 lbs)") + ylab("Miles/(US) gallon")
+
+dev.off()  
+
+
+```
+
+Sin embargo, es posible decirle que nos guarde cada gráfico en un fichero diferente si hacemos `onefile = FALSE` y, además, específicamos en `file` como debe ser el orden de numeración. (Ver apartado `file` en `?postcript` para más info)
+
+
+```{r, results = "hide"}
+
+pdf(file = "ejemplo%1d.pdf", height = 5/2.54, width = 10/2.54, onefile = FALSE)  # Una figura de 5x10 cm
+
+p    
+
+p + xlab("Weight (1000 lbs)") + ylab("Miles/(US) gallon")
+
+dev.off()  
+
+
+```
+
+
+### EPS
+
+En su funcionamiento básico es exactamente igual que el PDF. La única diferencia es que R recomienda llamar primero a `setEPS()`
+
+```{r, , results = "hide"}
+setEPS() 
+postscript(file = "ejemplo2.eps", height = 5/2.54, width = 10/2.54)  # Una figura de 5x10 cm
+
+p    
+
+
+dev.off()  
+
+
+```
+
+(Algunas opciones más [aquí](http://moc.environmentalinformatics-marburg.de/gitbooks/publicationQualityGraphics/_book/chapters/04_saving_visualisations/postscript.html))
+
+
+## Salida a bitmap: TIFF y PNG
+
+Tanto PDF como EPS son formatos vectoriales y, por tanto, no es necesario especificar una resolución. Sin embargo, al trabajar con mapas de bitmaps, además del tamaño, hay que especificar la resolución. En general, las revistas suelen pedir una resolución de 300 ppi para los gráficos en escalas de grises y 600 ppi para las fotos y figuras con mucho color. _ppi_ son __pixels per inch__, es decir, los pixels por pulgada. 
+
+En primer lugar veamos la ayuda de los devices gráficos de tiff y png con `?tiff` o `png`. Lo primero que nos vamos a fijar en la ayuda es que hay un argumento llamado `units` que por defecto viene en `px` (pixels) y que puede ser cm, in o mm. El otro argumento importante es `res`, que es la resolución en ppi y que por defecto es `NA`, pero si se pone las unidades en pixels la resolución por defecto es 72 ppi. 
+
+Para generar la figura con el tamaño y la resolución adecuada, por tanto, habría que establecer dichos parámetros
+
+```{r, message = FALSE, results = "hide"}
+
+
+png(file = "ejemplo3.tiff", height = 5, width = 10, units = "cm", res = 300)  # Una figura de 5x10 cm
+
+p    
+
+dev.off()  
+
+
+```
+
+El comando para `tiff` es idéntico con la excepción de que `tiff` acepta varias compresiones (`compression`) que tiene que venir específicada por cada revista concreta. 
+
+
+## La salida de ggplot2
+
+`ggplot2` tiene un comando específico para guardar los gráficos en ficheros, es [`ggsave`](http://docs.ggplot2.org/current/ggsave.html). Su uso es mucho más sencillo que todos los anteriores, pero es específico de los plots generados por `ggplot2`
+
+```{r}
+ggsave("example4.pdf", width = 10, height = 8, units = "cm")
+
+```
+
+Por defecto, `ggsave` imprime el último plot realizado con `ggplot2` (puede obtenerse con el comando `last_plot()`). Por supuesto, puede pasarse como argumento cualquier otro objeto creado con `ggplot2`. 
+
+```{r}
+
+p2 <- p + geom_smooth( method=lm)
+
+p2
+
+ggsave(p2, filename = "example5.tiff", width = 10, height = 8, units = "cm", dpi = 96)
+
+```
+
+Podemos cambiar la resolución de los bitmaps como tiff usando la opcion `dpi`. En este caso la he fijado en 96, que es el estándar de la web, para que veáis como baja la resolución de la figura. 
+
+
+## Más recursos 
+
+Algunos tutoriales similares son: 
+
+http://gforge.se/2013/02/exporting-nice-plots-in-r/
+
+https://danieljhocking.wordpress.com/2013/03/12/high-resolution-figures-in-r/
+
+

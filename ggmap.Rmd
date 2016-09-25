@@ -1,0 +1,135 @@
+---
+title: "Visualización espacial con ggmap"
+author: "Hector Tejero"
+date: "September 19, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
+## Mapas 
+
+En este tutorial vamos a ver cómo representar datos sobre mapas utilizando la librería ```ggmap```. 
+
+```{r}
+require("ggmap")
+```
+
+```ggmap``` es una paquete de visualización espacial construido sobre ```ggplot2```. Básicamente, ```ggmap``` va a descargarse la imagen de un mapa y lo va a representar como una capa de ```ggplot2``` sobre la que ahora podemos representar los datos de la manera que queramos utizando toda la potencia de ```ggplot2```. El proceso siempre se divide por tanto en dos partes: primero nos bajamos el mapa con `get_map` y luego haremos el gráfico con `ggmap`. Existe una función básica `qmap` similar al `qplot` del ```ggplot2``` para hacerlo todo a la vez en etapas preliminares. 
+
+```{r}
+
+qmap(location = "Córdoba, Spain", zoom = 14)
+
+```
+
+La funcion qmap es muy sencilla, pero nos permite ver rápidamente algunas de las opciones para obtener los mapas. La forma más sencilla y general de obtener un mapa es la anterior: fijando una `location` en el centro y un `zoom` que determina de forma aproximada el tamaño del mapa. El `zoom` va a ser un entero entre 3 y 20. 3 es a escala continental y 20 a escala de edificio, más o menos. ¿
+
+```{r}
+
+qmap(location = "Córdoba, Spain", zoom = 3)
+qmap(location = "Córdoba, Spain", zoom = 20)
+
+
+```
+
+
+De dónde coge el mapa ```ggmap```? Tiene diferentes fuentes que veremos a continuación, pero la localización siempre la coge de Google Maps (para ver si una localización existe podemos usar la función `geocode`) Las fuentes de los mapas son: 
+
+ - Google Maps
+ - OpenStreetMap
+ - Stamen Maps 
+ - CloudMade Maps (necesita clave)
+
+Lo interesante de usar diferentes fuentes es que cada una tiene diferentes estilos. Podéis ver los estilos en la ayuda del argumento `maptype` de la función `get_map`
+
+```{r}
+?get_map
+
+qmap(location = "Córdoba, Spain", zoom = 17, source = "google", maptype = "satellite")
+
+qmap(location = "Cordoba, Spain", zoom = 17,  source = "stamen", maptype = "watercolor")
+
+qmap(location = "Córdoba, Spain", zoom = 14, source = "osm")
+
+```
+
+En realidad `qmap` es un _wrapper_ de `get_map` y `ggmap`, de manera que las instrucciones anteriores equivalen a 
+
+```{r}
+
+map <- get_map(location = "Córdoba, Spain", zoom = 17, source = "google", maptype = "hybrid")
+
+ggmap(map)
+
+```
+
+Algunas opciones interesantes son, coger los mapas en blanco y negro (opción `color = "bw"` en `get_map`) o oscurecerlos usando la opción `darken` en `ggmap` (0 para transparente hasta 1 para opaco)
+
+## Representar datos espaciales: Ébola
+
+Vamos a este dataset: [A comprehensive database of the geographic spread of past human Ebola outbreaks](http://www.nature.com/articles/sdata201442). Los datos se pueden bajar los datos de [aquí](https://ndownloader.figshare.com/files/3230399)
+
+Cargamos los datos y les echamos un ojo 
+
+```{r}
+data.ebola = read.csv("~/Downloads/05Eboladatapaperspreadtable.csv")
+str(data.ebola)
+
+```
+
+La descripcion de los datos está en el artículo. Fijaros que el dataset tiene dos columnas: `LONG` y `LAT` que son las que utilizaremos como ejes X e Y para representar los datos. 
+
+Lo primero será coger un mapa de la zona del Congo, Zaire. Podeis probar diferentes zooms y locations usando `qmap`. Yo he elegido el 4.  
+
+
+```{r}
+congo.map <- get_map(location = 'Congo', zoom=4)
+```
+
+
+Una vez que tenemos el mapa, vamos a representar los _outbreaks_ que regoge el dataset. 
+
+```{r}
+
+ggmap(congo.map) + geom_point(aes(x = LONG, y = LAT), data = data.ebola)
+
+```
+
+Por supuesto, podemos representar otras variables como las muertes observadas, etc.  
+
+
+```{r}
+
+ggmap(congo.map) + geom_point(aes(x = LONG, y = LAT, color = OB_DEATH), data = data.ebola)
+```
+
+
+ En el [artículo del paquete `ggmap`](https://journal.r-project.org/archive/2013-1/kahle-wickham.pdf) podeis ver más ejemplos de representación espacial, como por ejemplo mapas de densidad
+
+
+## Cloropleth maps 
+
+Los mapas _cloropleth_ permiten representar una variable continua en las administraciones territoriales de un determinado mapa. 
+
+![](http://i.stack.imgur.com/J3wRt.png)
+
+Dos tutoriales interesantes: 
+
+http://www.everydayanalytics.ca/2016/03/plotting-choropleths-from-shapefiles-in-R.html
+
+http://rforpublichealth.blogspot.com.es/2015/10/mapping-with-ggplot-create-nice.html
+
+## Resources 
+
+[CheatSheet](https://www.nceas.ucsb.edu/~frazier/RSpatialGuides/ggmap/ggmapCheatsheet.pdf)
+
+[Artículo del paquete](https://journal.r-project.org/archive/2013-1/kahle-wickham.pdf)
+
+
+https://blog.dominodatalab.com/geographic-visualization-with-rs-ggmaps/
+
+
+
