@@ -13,5 +13,5 @@ Material para un curso básico de visualización de datos
 4. [Radar plots](http://rpubs.com/htejero/212368)
 5. RCircos
 6. Plot_ly y Shiny 
-7. R Markdown
+7. [R Markdown](http://rpubs.com/htejero/212369)
 
