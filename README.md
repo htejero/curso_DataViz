@@ -10,7 +10,7 @@ Material para un curso básico de visualización de datos
 1. [Salida de imágenes a fichero](http://rpubs.com/htejero/212362)
 2. Visualización espacial con ggmap
 3. [Heatmaps](http://rpubs.com/htejero/212365)
-4. Radar plots
+4. [Radar plots](http://rpubs.com/htejero/212368)
 5. RCircos
 6. Plot_ly y Shiny 
 7. R Markdown
