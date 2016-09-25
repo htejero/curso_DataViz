@@ -1,6 +1,8 @@
 # Curso de Visualización de datos
 
-[Héctor Tejero](https://www.researchgate.net/profile/Hector_Tejero) 
+Héctor Tejero
+[Researchgate Profile](https://www.researchgate.net/profile/Hector_Tejero) 
+[Google scholar](https://scholar.google.es/citations?user=LpfQt8wAAAAJ&hl=en)
 
 [Translational Bioinformatics Unit](https://www.cnio.es/ing/grupos/plantillas/presentacion.asp?pag=1464). CNIO 
 
