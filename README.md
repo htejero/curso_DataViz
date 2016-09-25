@@ -20,4 +20,4 @@ Material para un curso básico de visualización de datos
 
 
 
-Descargar el código de las webs [aquí](https://dl.dropboxusercontent.com/u/22016271/script_codigo.R)
+Descargad el código de las webs [aquí](https://dl.dropboxusercontent.com/u/22016271/script_codigo.R)
